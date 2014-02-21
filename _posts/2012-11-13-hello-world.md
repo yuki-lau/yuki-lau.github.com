@@ -6,7 +6,7 @@ tags: [pizn theme, Black Cube]
 ---
 
 ###"IMG"标签：
-<img src="{/images/yujinxiang.jpeg" alt="thumb" >
+<img src="{{{ site.url }}/images/yujinxiang.jpeg" alt="thumb" >
 
 ###"BLACKQUERY"标签：
 
