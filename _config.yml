@@ -1,0 +1,33 @@
+markdown:         rdiscount
+pygments:         true
+paginate:         5
+
+title:            The One Theme
+url:              http://yuki-lau.github.io
+feed:             /atom.xml
+author:
+    name:         YukiLau
+    email:        sasa-yoyo@163.com
+    description:  "xxx."
+
+about:            "说点啥."
+follow:
+    email:        sasa-yoyo@163.com
+    github:       https://github.com/yuki-lau
+    weibo:        http://weibo.com/yuuuuuki
+description:      Just another blog theme -- the One
+
+indexContent:     true
+imageLink:        http://www.pizn.net/static/images/20121109Monutain.jpg
+
+
+style:            /css/style.css
+blogName:         YukiLau 
+blogDesc:         Running Girl
+favicon:          /favicon.ico
+theme:            blue
+
+disqus:           yukilau
+
+copyright:        Copyright © 2013-2014 <a href="http://yuki-lau.github.io" target="_blank">Yuki Lau</a> All rights reserved.<br/> 
+test:             ok
