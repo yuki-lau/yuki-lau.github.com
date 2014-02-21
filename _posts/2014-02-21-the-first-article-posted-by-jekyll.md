@@ -7,4 +7,4 @@ tags: []
 ---
 {% include JB/setup %}
 
-ÕâÊÇÊ¹ÓÃjekyll-bootstrap¹¹½¨µÄ²©¿ÍµÄµÚÒ»ÆªÎÄÕÂ£¬Ê¹ÓÃmarkdownĞ´µÄÎÄÕÂ¡£
+è¿™æ˜¯ä½¿ç”¨jekyll-bootstrapæ„å»ºçš„åšå®¢çš„ç¬¬ä¸€ç¯‡æ–‡ç« ï¼Œä½¿ç”¨markdownå†™çš„æ–‡ç« ã€‚
