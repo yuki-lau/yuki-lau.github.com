@@ -2,29 +2,28 @@ markdown:         rdiscount
 pygments:         true
 paginate:         5
 
-title:            The One Theme
+title:            Yuki Lau's Blog
 url:              http://yuki-lau.github.io
 feed:             /atom.xml
 author:
     name:         YukiLau
     email:        sasa-yoyo@163.com
-    description:  "xxx."
+    description:  "A Running Girl and Coding Girl."
 
 about:            "说点啥."
 follow:
     email:        sasa-yoyo@163.com
     github:       https://github.com/yuki-lau
     weibo:        http://weibo.com/yuuuuuki
-description:      Just another blog theme -- the One
+description:      Yuki Lau's Blog which records her life, study and working.
 
 indexContent:     true
-imageLink:        http://www.pizn.net/static/images/20121109Monutain.jpg
 
 
 style:            /css/style.css
 blogName:         YukiLau 
 blogDesc:         Running Girl
-favicon:          /favicon.ico
+favicon:          /images/style/favicon.ico
 theme:            blue
 
 disqus:           yukilau
