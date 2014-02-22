@@ -158,5 +158,6 @@ push完成后，我们会在项目的settings->GitHub Pages看到如下提示：
 如果你使用了其他基本的jekyll模板，那么可以参考jekyll官网学习jekyll目录结构，如何<a href="http://jekyllrb.com/docs/posts/" target="_blank">writing post</a>；
 
 ……
+
 至此，在Windows环境下搭建Jekyll环境，并使用GitHub Pages搭建个人博客的方式就全部介绍完了。虽然算是Quick Start这种比较浅的方式，但是可以在后续时候中再满满完善嘛，毕竟现在这个博客是你的了，你拥有完全控制权，加些功能什么的不还是要看你愿不愿意折腾嘛。
 
