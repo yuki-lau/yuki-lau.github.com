@@ -145,11 +145,11 @@ self.content = File.read_with_options(File.join(base, name),:encoding=>"utf-8")
 
 push完成后，我们会在项目的settings->GitHub Pages看到如下提示：
 
-<img src="/images/use-jekyll-and-github-pages-to-build-your-blog-site-under-windows-1.jpg" />
+<img src="/images/201402/use-jekyll-and-github-pages-to-build-your-blog-site-under-windows-1.jpg" />
 
 如果出现了build failed，则需要确定在本地是否jekyll serve通过，若本地通过了但Github没通过，则请仔细检查编码问题。过几分钟后，再次刷新，若出现如下提示，则表明你的站点发布成功啦！
 
-<img src="/images/use-jekyll-and-github-pages-to-build-your-blog-site-under-windows-2.jpg" />
+<img src="/images/201402/use-jekyll-and-github-pages-to-build-your-blog-site-under-windows-2.jpg" />
 
 ###Other
 
