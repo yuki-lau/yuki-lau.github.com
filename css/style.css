@@ -396,6 +396,7 @@ li[class^="icon-"].icon-large:before, li[class*=" icon-"].icon-large:before {
 .post p, .post h3, .post h4, .post blockquote, .post li { max-width: 720px; }
 .post blockquote p { margin-bottom: 0; }
 .post table { width: 680px; }
+.post table caption{text-align:center;font-weight:bold;}
 
 h1, h2, h3, h4, h5, h6{ font-weight: 500; color:#333; }
 .post h1, .post h2, .post h3, .post h4, .post h5, .post h6 { margin-bottom: 0.4em; line-height: 1.5; }
