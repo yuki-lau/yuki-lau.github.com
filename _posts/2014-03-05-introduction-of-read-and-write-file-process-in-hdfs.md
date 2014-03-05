@@ -56,7 +56,11 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
 * 基于HTTP：第二名字节点合并命名空间镜像和镜像编辑日志相关的接口。
 
 ###HDFS文件与目录操作流程
-TODO
+HDFS的文件与目录操作一般是指客户端对HDFS文件目录树的操作，即客户端到名字节点的元数据操作，如更改文件名（rename），在给定目录下创建一个子目录（mkdir），删除某个文件（delete）等。
+
+HDFS的文件目录树维护在NameNode中，而NameNode与DataNode的交互维持着主从关系。因此，这些文件与目录操作一般只涉及客户端和名字节点的交互，通过远程接口ClientProtocol进行，对元数据进行“标记”，至于“真正”对数据的操作，则需要在DataNode上报NameNode时，返回相应的DatanodeCommand指挥DataNode进行执行。
+
+接下来，可以参阅 <a href="/hdfs/2014/03/05/client-delete-file-process-in-hdfs.html" target="_blank">HDFS客户端删除文件流程</a>，进行理解。
 
 ###HDFS读文件流程
 TODO
