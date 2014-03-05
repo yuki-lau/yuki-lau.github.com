@@ -74,6 +74,7 @@ public boolean delete(String src, boolean recursive) throws IOException {
 
 ####2. 名字节点处理删除操作远程调用
 名字节点处理删除操作远程调用主要实现两个目的：
+
 1. 目标文件的元数据删除
 2. 将目标文件对应的数据块放入recentInvalidateSets
 
