@@ -111,9 +111,10 @@ private synchronized DatanodeInfo blockSeekTo(long target) throws IOException {
           
 			// 创建并初始化读数据需要的BlockReader对象
           	blockReader = BlockReader.newBlockReader(s, src, blk.getBlockId(), 
-            blk.getGenerationStamp(),
-            offsetIntoBlock, blk.getNumBytes() - offsetIntoBlock,
-            buffersize, verifyChecksum, clientName);
+            								blk.getGenerationStamp(),
+            								offsetIntoBlock, 
+											blk.getNumBytes() - offsetIntoBlock,
+            								buffersize, verifyChecksum, clientName);
           	return chosenNode;
         } 
 		catch (IOException ex) {
@@ -137,6 +138,7 @@ private synchronized DatanodeInfo blockSeekTo(long target) throws IOException {
 以上过程顺利执行完毕后，会返回与客户端建立连接的DataNodeInfo对象，且BlockReader初始化完毕，可用于进行数据流读取了。
 
 > **注意**：在构造BlockReader的过程中，如果选择的DataNode就是本地节点的话，则创建的是BlockReader的子类**BlockReaderLocal**，以进行本地读取优化。
+
 
 ####3. 客户端从DataNode读取数据
 
@@ -189,16 +191,145 @@ private void readBlock(DataInputStream in) throws IOException {
 }
 </pre>
 
+成功创建BlockSender以后，就可以开始通过BlockSender.sendBlock()发送数据了。
+
+> **注意**：客户端每读取**1个Block对应1个BlockSender对象**，BlockSender.sendBlock()方法也非sendBlock**s**()，因此该方法每次只会发送一个Block。
+
+
+BlockSender的构造函数的功能是根据需求打开相应的数据流，并对数据块校验和及偏移量进行处理。读取一个数据块需打开两种数据流：
+
+1. 读取数据块的流 - blockIn
+2. 读取块元数据的流 - checksumIn
+
+BlockSender.sendBlock()以数据包(packet)为单位来发送数据，BlockSender.sendBlock()又循环调用**sendChunks()**完成Block的发送，代码如下。
+
+<pre>
+long sendBlock(DataOutputStream out, OutputStream baseStream, 
+               BlockTransferThrottler throttler) throws IOException {
+	...
+
+	ByteBuffer pktBuf = ByteBuffer.allocate(pktSize);
+
+	while (endOffset > offset) {
+		// 循环调用 sendChunks 进行数据发送
+		long len = sendChunks(pktBuf, maxChunksPerPacket, 
+                              streamForSendChunks);
+		// 更新已发送数据位置
+		offset += len;
+		totalRead += len + ((len + bytesPerChecksum - 1)
+								/bytesPerChecksum*checksumSize);
+		seqno++;
+	}
+
+	try {
+		out.writeInt(0); // 标记 Block 结束        
+		out.flush();
+	} 
+	catch (IOException e) { //socket error
+		throw ioeToSocketException(e);
+	}
+
+	...
+
+	blockReadFully = (initialOffset == 0 && offset >= blockLength);
+	
+	return totalRead;
+}
+</pre>
+BlockSender.sendChunks()将实际数据块数据以片(chunk)为单位进行校验和发送:
+
+* 检验：默认以512字节为单位，由blockIn读出。校验数据(checksum)默认大小为4字节，用来校验每个片，由checksumIn读出。
+* 发送：每个packet默认最大片数为128，即默认填充满的packet大小为64K。每次发送时也会将这一部分数据的checksum也进行发送，还有一些涉及序列、包长度、offset等内容的头信息。
+
+DataNode数据发送有两种方式，由**blockInPosition是否 >= 0**来区分：
+
+* transferTo：针对客户端的读数据请求
+* normal transfer：针对其他DataNode的读数据请求
+
+<pre>
+private int sendChunks(ByteBuffer pkt, int maxChunks, OutputStream out) 
+					throws IOException {
+	  
+	...
+
+	// write packet header
+	pkt.putInt(packetLen);
+	pkt.putLong(offset);
+	pkt.putLong(seqno);
+	pkt.put((byte)((offset + len >= endOffset) ? 1 : 0)); 
+	pkt.putInt(len);
+    
+	int checksumOff = pkt.position();
+	int checksumLen = numChunks * checksumSize;
+	byte[] buf = pkt.array();
+    
+	// 将数据的 checksum 读入buf
+	if (checksumSize > 0 && checksumIn != null) {
+		try {
+			checksumIn.readFully(buf, checksumOff, checksumLen);
+		} 
+		catch (IOException e) {
+			...
+		}
+	}
+
+    ... 
+
+	//use transferTo()
+	if (blockInPosition >= 0) {
+
+		// 将数据写到 client
+		SocketOutputStream sockOut = (SocketOutputStream)out;
+		sockOut.write(buf, 0, dataOff);
+		sockOut.transferToFully(((FileInputStream)blockIn).getChannel(), 
+									blockInPosition, len);
+
+		// 更新写到Client的数据在Block中的位置
+		blockInPosition += len;            
+	} 
+
+	// normal transfer
+	else {
+		out.write(buf, 0, dataOff + len);
+	}
+
+	...
+
+	return len;
+}
+</pre>
+
+需要特别注意发送包中各个len、offset的含义：
+
+* packetLen：发送包的长度（header + checksum + data）
+* offset：当前data在block中的起始位置
+* seqno：发送序列号
+* (offset + len >= endOffset) ? 1 : 0)：是否为该文件的最后一个数据包
+* Len：数据（data的长度）
+* checksumOff：checksum在数据包中的起始位置
+* checksumLen：cheksum的长度
+
+它们在Chunk数据包中的分布示意图如下：
+
+<img src="/images/201403/6.gif" alt="DataNode发送到Client的数据包结构" />
+
+通过对DataNode数据发送部分的源码分析，得出HDFS读取数据时DataNode的流程图：
+
+<img src="/images/201403/7.gif" alt="数据节点读取数据流程图" />
+
+
 ####4. 特殊处理：getBlockLocations()、reportBadBlocks()
 
 * getBlockLocations()：在客户端读取数据的过程中，可能会出现一次请求（默认10个LocatedBlock）的blocks不够读，需要再次请求NameNode获取文件后续block信息的情况。
 * reportBadBlocks()：在客户端从DataNode读回的数据中，包含数据的Checksum信息，如果客户端本地校验失败，则会调用ClientProtocol.reportBadBlocks()报告坏块。
+
 
 ####5. 关闭文件数据流
 
 应用读入所需的数据后，需要关闭输入流。
 
 DFSInputStream.close()用于关闭流，这个方法很简单，检查了对象和所属的DFSClient对象的状态后，关闭可能打开的BlockReader对象和到数据节点的Socket对象，在调用了父类的close()方法后，设置标志位closed。
+
 
 ###异常处理
 * 在客户端读取文件时，如果数据节点发生了错误，如节点停机或者网络出现故障，那么客户端会尝试下一个数据块的位置。同时，它也会记住出故障的那个数据节点（调用 **addToDeadNodes(DatanodeInfo info)**），不会再进行尝试。
