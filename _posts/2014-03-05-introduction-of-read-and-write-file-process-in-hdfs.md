@@ -34,7 +34,7 @@ HDFS的体系结构中包含了NameNode、DataNode和Client这3个主要角色�
 * 服务器间的接口：
 	* **DatanodeProtocol**：DataNode与NameNode之间的接口。由于调用方是DataNode，因此是NameNode实现该接口。DataNode不断通过这个接口向NameNode报告一些信息，方法的返回值会带回名字节点指令。
 	* **InterDatanodeProtocol**：DataNode与DataNode之间的接口。由于是DataNode之间互相调用，因此是DataNode实现该接口。
-	* **NamenodeProtocol**：Secondary NameNode、HDFS均衡器、NameNode之间的接口。由于调用的是NameNode，因此由NameNode实现该接口。
+	* **NamenodeProtocol**：Secondary NameNode、HDFS均衡器、NameNode之间的接口。由于调用方的是SecondaryNameNode、Balancer，因此由NameNode实现该接口。
 * 安全相关的接口
 	* **RefreshAuthorizationPolicyProtocol**：NameNode实现该接口。
 

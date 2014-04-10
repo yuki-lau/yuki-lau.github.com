@@ -48,7 +48,7 @@ category: HDFS
 1. 客户端发起删除文件操作；
 2. 名字节点处理删除操作远程调用：删除文件源数据，“标记”文件数据块为删除；
 3. 名字节点生成删除数据块DatanodeCommand：ReplicationMonitor将“标记”删除的文件数据块生删除数据块的命令；
-4. 数据节点删除文件数据块：数据及诶单上报心跳，携带回删除数据块命令，真正删除文件数据。
+4. 数据节点删除文件数据块：数据节点上报心跳，携带回删除数据块命令，真正删除文件数据。
 
 ####1. 客户端发起删除文件操作
 客户端程序通过调用DistributedFileSystem这类的实例来实现对HDFS的操作。Hadoop中定义了抽象文件接口 <code>org.apache.hadoop.fs.FileSystem</code>，DistributedFileSystem就是FileSystem的一个具体实现，也就是HDFS(Hadoop Distributed File System)这个名称的由来。
@@ -127,7 +127,7 @@ void removePathAndBlocks(String src, List<Block> blocks) throws IOException {
 
 通过上面的分析，我们看到ClientProtocol.delete()将目标文件的元数据删除，并将目标文件对应的数据块放入了recentInvalidateSets中，至此它的任务就结束了。
 
-剩下的事儿，就交给ReplicationMonitor来处理recentInvalidateSets，生成删除数据块命令下方给数据节点了。
+剩下的事儿，就交给ReplicationMonitor来处理recentInvalidateSets，生成删除数据块命令下放给数据节点了。
 
 ####3. 名字节点生成删除数据块DatanodeCommand
 复制线程ReplicationMonitor为FSNamesystem的内部类，它在运行的过程中不断的做两件事情的检查：
@@ -135,12 +135,12 @@ void removePathAndBlocks(String src, List<Block> blocks) throws IOException {
 * computeDatanodeWork()：计算需要调度数据节点进行复制、删除的数据块，这些数据节点会在它们的下一次心跳上报时被通知到；
 * processPendingReplication()：检查是否有数据块复制请求超时，如果有将这次复制过程撤销，并将数据块放回neededReplication队列，等待下一轮computeDatanodeWork重新生成复制请求。
 
-由上描述可知，生成删除数据块命令的操作将在computeDatanodeWork()方法中完成。在computeDatanodeWork()方法中，又包含两个任务：
+由上描述可知，**生成删除数据块命令的操作将在computeDatanodeWork()方法中完成**。在computeDatanodeWork()方法中，又包含两个任务：
 
 * computeReplicationWork()：计算需要复制的数据块 
 * computeInvalidateWork()：计算需要删除的数据块
 
-computeInvalidateWork()会根据需要处理的数据节点数量循环调用invalidateWorkForOneNode()，每次处理一个DataNode需要删除的数据块，将需要删除的数据块添加到存储它们的数据节点抽象DatanodeDescriptor中：
+**computeInvalidateWork()**会根据需要处理的数据节点数量循环调用invalidateWorkForOneNode()，每次处理一个DataNode需要删除的数据块，**将需要删除的数据块添加到存储它们的数据节点抽象DatanodeDescriptor中**：
 <pre>
 private synchronized int invalidateWorkForOneNode() {
 	...
