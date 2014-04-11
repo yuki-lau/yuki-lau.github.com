@@ -17,13 +17,13 @@ category: HDFS
 
 ###目录：
 * 整理流程
+* 异常处理
 * 源码分析
 	* 1.客户端创建文件输入流
 	* 2.客户端与DataNode建立连接
 	* 3.客户端从DataNode读取数据
 	* 4.特殊处理：getBlockLocations()、reportBadBlocks()
 	* 5.关闭文件数据流
-* 异常处理
 
 ###整体流程
 <img src="/images/201403/4.png" alt="客户端到名字节点的读取文件操作" />
@@ -44,6 +44,12 @@ category: HDFS
 > 在步骤5中，并不会每次都调用getBlockLocations()方法，因为DFSClient默认预取一个文件的10个LocatedBlock信息，所以只有在预取的blocks信息都读完时，才会再次调用getBlockLocations()方法。
 
 以上就是HDFS中客户端读文件流程的大体过程了，这里没有涉及过多的源码细节，旨在对整体有一个清晰的了解，接下来我们将在源码层面上对读文件流程进行更加细致的介绍。
+
+
+###异常处理
+* 在客户端读取文件时，如果数据节点发生了错误，如节点停机或者网络出现故障，那么客户端会尝试下一个数据块的位置。同时，它也会记住出故障的那个数据节点（调用 **addToDeadNodes(DatanodeInfo info)**），不会再进行尝试。
+* 在客户端读取文件时，如果数据块出现了错误，即校验和不一致，则说明数据块已经损坏，那么客户端会尝试从别的数据节点中读取另外一个副本文件的内容。同时，它也会将这个信息报告给（调用 **reportBadBlock()**）名字节点。
+
 
 ###源码分析
 
@@ -330,8 +336,4 @@ private int sendChunks(ByteBuffer pkt, int maxChunks, OutputStream out)
 
 DFSInputStream.close()用于关闭流，这个方法很简单，检查了对象和所属的DFSClient对象的状态后，关闭可能打开的BlockReader对象和到数据节点的Socket对象，在调用了父类的close()方法后，设置标志位closed。
 
-
-###异常处理
-* 在客户端读取文件时，如果数据节点发生了错误，如节点停机或者网络出现故障，那么客户端会尝试下一个数据块的位置。同时，它也会记住出故障的那个数据节点（调用 **addToDeadNodes(DatanodeInfo info)**），不会再进行尝试。
-* 在客户端读取文件时，如果数据块出现了错误，即校验和不一致，则说明数据块已经损坏，那么客户端会尝试从别的数据节点中读取另外一个副本文件的内容。同时，它也会将这个信息报告给（调用 **reportBadBlock()**）名字节点。
 

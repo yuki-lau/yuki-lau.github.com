@@ -66,4 +66,4 @@ HDFS的文件目录树维护在NameNode中，而NameNode与DataNode的交互维�
 参阅 <a href="/hdfs/2014/03/11/client-read-file-process-in-hdfs.html" target="_blank">HDFS客户端读文件流程</a>
 
 ###HDFS写文件流程
-TODO
+参阅 <a href="/hdfs/2014/04/11/client-write-file-process-in-hdfs.html" target="_blank">HDFS客户端写文件流程</a>
